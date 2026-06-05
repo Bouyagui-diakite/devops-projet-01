@@ -1,0 +1,51 @@
+# docker-compose.yml — décrit TOUS nos services et comment ils s'assemblent.
+# Une seule commande "docker compose up" démarre tout l'ensemble.
+
+services:
+# === Service 1 : la base de données PostgreSQL ===
+db:
+  image: postgres:16            # on utilise une image officielle toute prête
+  environment:                  # config de la base
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: appdb
+  volumes:
+    # LE point clé de la persistance : on relie un "volume" nommé au dossier
+    # où Postgres stocke ses données. Le volume vit en dehors du conteneur,
+    # donc les données SURVIVENT même si on détruit/recrée le conteneur.
+    - db-data:/var/lib/postgresql/data
+  healthcheck:                  # comment savoir si la DB est prête ?
+    test: ["CMD-SHELL", "pg_isready -U postgres"]
+    interval: 2s
+    timeout: 3s
+    retries: 10
+
+# === Service 2 : notre API ===
+app:
+  build: .                      # construit l'image à partir de notre Dockerfile
+  ports:
+    - "3000:3000"               # expose le port 3000 sur notre machine
+  environment:
+    # On passe les infos de connexion à l'app.
+    # DB_HOST = "db" : MAGIE DE COMPOSE ! Le nom du service ("db") devient
+    # automatiquement le nom de domaine du conteneur sur le réseau interne.
+    # Pas besoin d'adresse IP : l'app trouve la base juste avec "db".
+    DB_HOST: db
+    DB_PORT: 5432
+    DB_USER: postgres
+    DB_PASSWORD: postgres
+    DB_NAME: appdb
+  depends_on:
+    db:
+      condition: service_healthy   # ne démarre l'app QUE quand la DB est prête
+
+adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db     
+
+# Déclaration du volume nommé utilisé plus haut.
+volumes:
+db-data:

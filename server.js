@@ -1,9 +1,17 @@
 // server.js — le point d'entrée qui DÉMARRE le serveur.
-// Il importe l'app définie dans app.js et la met à l'écoute.
 const app = require("./app");
+const { initDb } = require("./db");
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`API démarrée sur le port ${PORT}`);
-});
+// On prépare la base AVANT de démarrer le serveur.
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`API démarrée sur le port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Échec du démarrage :", err.message);
+    process.exit(1);
+  });
