@@ -13,7 +13,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  res.status(500).json({ status: "ok" });
+  res.status(200).json({ status: "ok" });
 });
 
 module.exports = app; // on exporte l'app pour server.js ET pour les tests
