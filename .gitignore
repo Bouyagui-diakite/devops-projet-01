@@ -1,0 +1,5 @@
+# Fichiers à NE PAS versionner sur Git.
+# node_modules est lourd et reconstruit avec "npm install" → on l'exclut.
+node_modules
+npm-debug.log
+.env

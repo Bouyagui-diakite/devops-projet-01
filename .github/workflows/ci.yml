@@ -1,0 +1,50 @@
+# .github/workflows/ci.yml
+# Ce fichier décrit notre pipeline CI/CD. GitHub le détecte automatiquement
+# (grâce à son emplacement .github/workflows/) et l'exécute sur ses serveurs.
+
+name: CI - Tests et Build Docker
+
+# QUAND déclencher le pipeline ?
+on:
+  push:              # à chaque "git push"...
+    branches: [ main ]   # ...sur la branche main
+  pull_request:      # et aussi sur chaque Pull Request
+    branches: [ main ]
+
+# QUOI exécuter ? Un ensemble de "jobs".
+jobs:
+  # --- JOB 1 : lancer les tests ---
+  tests:
+    runs-on: ubuntu-latest   # GitHub nous prête une machine Linux neuve
+    steps:
+      # 1. Récupérer le code du dépôt sur la machine
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      # 2. Installer Node.js
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # 3. Installer les dépendances (express, supertest...)
+      - name: Installer les dépendances
+        run: npm install
+
+      # 4. Lancer les tests. Si un test échoue, le pipeline devient ROUGE.
+      - name: Lancer les tests
+        run: npm test
+
+  # --- JOB 2 : construire l'image Docker ---
+  # "needs: tests" => ce job ne démarre QUE si les tests sont passés au vert.
+  build-docker:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      # Construire l'image Docker (comme "docker build" en local).
+      # On vérifie ainsi que l'image se construit bien à chaque changement.
+      - name: Construire l'image Docker
+        run: docker build -t mon-api:${{ github.sha }} .
