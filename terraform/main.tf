@@ -5,6 +5,7 @@
 # === BLOC 1 : de quels "fournisseurs" (providers) a-t-on besoin ? ===
 # Un provider = un plugin qui permet à Terraform de piloter un système.
 # Ici on veut piloter Docker, donc on déclare le provider Docker.
+
 terraform {
   required_providers {
     docker = {
@@ -23,17 +24,18 @@ provider "docker" {}
 # Première ressource : l'image nginx (équivalent de "docker pull nginx").
 # Syntaxe : resource "<type>" "<nom_interne>" { ... }
 resource "docker_image" "nginx" {
-  name         = "nginx:latest"  # quelle image récupérer
-  keep_locally = false           # supprimer l'image au "destroy"
+  name         = var.image_docker  # ← la variable (maintenant "mon-api:1.0")
+  keep_locally = true              # GARDER l'image au "destroy" (c'est la TIENNE,
+                                   # construite localement : on ne veut pas la perdre)
 }
 
 # === BLOC 4 : la ressource conteneur (équivalent de "docker run") ===
 resource "docker_container" "serveur_web" {
-  name  = "mon-serveur-terraform"      # nom du conteneur
+  name  = var.nom_conteneur            # ← la variable, au lieu du texte en dur
   image = docker_image.nginx.image_id  # ← on RÉFÉRENCE l'image du bloc 3
 
   ports {
-    internal = 80    # port à l'intérieur du conteneur (nginx écoute sur 80)
-    external = 8081  # port sur ta machine (http://localhost:8081)
+    internal = var.port_interne    # port DANS le conteneur (ton app écoute sur 3000)
+    external = var.port_externe    # port sur ta machine
   }
 }

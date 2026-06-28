@@ -3,3 +3,12 @@
 node_modules
 npm-debug.log
 .env
+
+# Fichiers Terraform à NE PAS versionner :
+# - .terraform/ : plugins téléchargés (lourd, reconstruit par "terraform init")
+# - *.tfstate : la "mémoire" de Terraform, peut contenir des secrets
+# - .terraform.lock.hcl : on PEUT le versionner (bonne pratique), mais on le
+#   garde simple ici. Le code .tf, lui, DOIT être versionné.
+.terraform/
+*.tfstate
+*.tfstate.backup
